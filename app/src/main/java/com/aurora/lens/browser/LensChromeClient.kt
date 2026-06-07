@@ -20,7 +20,10 @@ class LensChromeClient : WebChromeClient() {
     }
 
     interface ProgressHost {
-        fun onProgress(progress: Int)
-        fun onTitle(title: String)
+        fun onProgress(progress: Int) {}
+        fun onTitle(title: String) {}
+        fun onPageStarted(url: String) {}
+        fun onPageFinished(url: String) {}
+        fun onNavigationStateChanged(canGoBack: Boolean, canGoForward: Boolean) {}
     }
 }
