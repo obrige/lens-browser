@@ -5,8 +5,8 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.EditorInfo
+import android.widget.Button
 import android.widget.EditText
-import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
@@ -70,16 +70,16 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
 
         tabManager = TabManager(webView, urlBar)
 
-        findViewById<ImageButton>(R.id.btn_back).setOnClickListener {
+        findViewById<Button>(R.id.btn_back).setOnClickListener {
             if (webView.canGoBack()) webView.goBack()
         }
-        findViewById<ImageButton>(R.id.btn_forward).setOnClickListener {
+        findViewById<Button>(R.id.btn_forward).setOnClickListener {
             if (webView.canGoForward()) webView.goForward()
         }
-        findViewById<ImageButton>(R.id.btn_refresh).setOnClickListener { webView.reload() }
-        findViewById<ImageButton>(R.id.btn_tabs).setOnClickListener { tabManager.showTabSwitcher() }
-        findViewById<ImageButton>(R.id.btn_home).setOnClickListener { navigate("https://www.google.com") }
-        findViewById<ImageButton>(R.id.btn_go).setOnClickListener { go() }
+        findViewById<Button>(R.id.btn_refresh).setOnClickListener { webView.reload() }
+        findViewById<Button>(R.id.btn_tabs).setOnClickListener { tabManager.showTabSwitcher() }
+        findViewById<Button>(R.id.btn_home).setOnClickListener { navigate("https://www.google.com") }
+        findViewById<Button>(R.id.btn_go).setOnClickListener { go() }
 
         urlBar.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_GO) { go(); true } else false
