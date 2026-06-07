@@ -20,7 +20,7 @@ class LensWebView @JvmOverloads constructor(
 
     init {
         try { configure() }
-        catch (e: Exception) { Log.e("LensWebView", "configure failed", e) }
+        catch (t: Throwable) { Log.e("LensWebView", "configure failed", t) }
     }
 
     fun setShieldProfile(p: ShieldProfile) {
