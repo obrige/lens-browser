@@ -38,7 +38,7 @@ class LensWebViewClient(
             ByteArrayInputStream(injected.toByteArray(Charsets.UTF_8)).let {
                 WebResourceResponse("text/html", "UTF-8", conn.responseCode, "OK", emptyMap(), it)
             }
-        } catch (_: Exception) {
+        } catch (_: Throwable) {
             null
         }
     }
