@@ -62,39 +62,25 @@
         android:elevation="8dp"
         android:background="?attr/colorSurface">
 
-        <Button android:id="@+id/btn_back"
-            style="?android:attr/buttonBarButtonStyle"
-            android:text="←"
-            android:textSize="20sp"
-            android:textColor="@color/text_secondary"
-            android:background="?attr/selectableItemBackgroundBorderless" />
-
-        <Button android:id="@+id/btn_forward"
-            style="?android:attr/buttonBarButtonStyle"
-            android:text="→"
-            android:textSize="20sp"
-            android:textColor="@color/text_secondary"
-            android:background="?attr/selectableItemBackgroundBorderless" />
-
-        <Button android:id="@+id/btn_refresh"
-            style="?android:attr/buttonBarButtonStyle"
-            android:text="↻"
-            android:textSize="20sp"
-            android:textColor="@color/text_secondary"
-            android:background="?attr/selectableItemBackgroundBorderless" />
-
-        <Button android:id="@+id/btn_home"
-            style="?android:attr/buttonBarButtonStyle"
-            android:text="⌂"
-            android:textSize="20sp"
-            android:textColor="@color/text_secondary"
-            android:background="?attr/selectableItemBackgroundBorderless" />
-
-        <Button android:id="@+id/btn_tabs"
-            style="?android:attr/buttonBarButtonStyle"
-            android:text="☰"
-            android:textSize="20sp"
-            android:textColor="@color/text_secondary"
-            android:background="?attr/selectableItemBackgroundBorderless" />
+        <ImageButton android:id="@+id/btn_back"
+            style="@style/BottomBarButton"
+            android:src="@drawable/ic_back"
+            android:contentDescription="@string/back" />
+        <ImageButton android:id="@+id/btn_forward"
+            style="@style/BottomBarButton"
+            android:src="@drawable/ic_forward"
+            android:contentDescription="@string/forward" />
+        <ImageButton android:id="@+id/btn_refresh"
+            style="@style/BottomBarButton"
+            android:src="@drawable/ic_refresh"
+            android:contentDescription="@string/refresh" />
+        <ImageButton android:id="@+id/btn_home"
+            style="@style/BottomBarButton"
+            android:src="@drawable/ic_home"
+            android:contentDescription="@string/home" />
+        <ImageButton android:id="@+id/btn_tabs"
+            style="@style/BottomBarButton"
+            android:src="@drawable/ic_tabs"
+            android:contentDescription="@string/tabs" />
     </LinearLayout>
 </LinearLayout>
