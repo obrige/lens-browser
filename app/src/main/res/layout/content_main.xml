@@ -35,7 +35,7 @@
             android:id="@+id/btn_go"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:src="@android:drawable/ic_menu_send"
+            android:src="@drawable/ic_go"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/go" />
     </LinearLayout>
@@ -63,19 +63,19 @@
         android:background="?attr/colorSurface">
 
         <ImageButton android:id="@+id/btn_back"    style="@style/BottomBarButton"
-            android:src="@android:drawable/ic_media_previous"
+            android:src="@drawable/ic_back"
             android:contentDescription="@string/back" />
         <ImageButton android:id="@+id/btn_forward" style="@style/BottomBarButton"
-            android:src="@android:drawable/ic_media_next"
+            android:src="@drawable/ic_forward"
             android:contentDescription="@string/forward" />
         <ImageButton android:id="@+id/btn_refresh" style="@style/BottomBarButton"
-            android:src="@android:drawable/ic_popup_sync"
+            android:src="@drawable/ic_refresh"
             android:contentDescription="@string/refresh" />
         <ImageButton android:id="@+id/btn_home"    style="@style/BottomBarButton"
-            android:src="@android:drawable/ic_menu_home"
+            android:src="@drawable/ic_home"
             android:contentDescription="@string/home" />
         <ImageButton android:id="@+id/btn_tabs"    style="@style/BottomBarButton"
-            android:src="@android:drawable/ic_menu_gallery"
+            android:src="@drawable/ic_tabs"
             android:contentDescription="@string/tabs" />
     </LinearLayout>
 </LinearLayout>
