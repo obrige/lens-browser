@@ -1,9 +1,11 @@
 package com.aurora.lens.browser
 
+import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import com.aurora.lens.shield.ShieldAssembler
 import com.aurora.lens.shield.ShieldProfile
 import java.io.ByteArrayInputStream
@@ -14,9 +16,13 @@ class LensWebViewClient(
     private val profile: ShieldProfile,
 ) : WebViewClient() {
 
+    private var errorRetryCount = 0
+    private var lastFailedUrl: String? = null
+
     private fun host(view: WebView?) = view?.context as? LensChromeClient.ProgressHost
 
     override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+        errorRetryCount = 0
         url?.let { host(view)?.onPageStarted(it) }
         updateNav(view)
     }
@@ -24,6 +30,18 @@ class LensWebViewClient(
     override fun onPageFinished(view: WebView?, url: String?) {
         url?.let { host(view)?.onPageFinished(it) }
         updateNav(view)
+    }
+
+    override fun onReceivedError(
+        view: WebView?, req: WebResourceRequest?, error: WebResourceError?
+    ) {
+        if (req?.isForMainFrame == true && errorRetryCount < 1) {
+            errorRetryCount++
+            lastFailedUrl = req.url.toString()
+            view?.postDelayed({ view?.loadUrl(req.url.toString()) }, 1500)
+        } else if (req?.isForMainFrame == true) {
+            Toast.makeText(view?.context, "无法加载页面，请检查网络", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
