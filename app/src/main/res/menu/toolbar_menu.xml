@@ -7,6 +7,12 @@
     <item android:id="@+id/action_find"
         android:title="页内查找"
         app:showAsAction="never" />
+    <item android:id="@+id/action_sniff"
+        android:title="资源嗅探"
+        app:showAsAction="never" />
+    <item android:id="@+id/action_read"
+        android:title="阅读模式"
+        app:showAsAction="never" />
     <item android:id="@+id/action_desktop"
         android:title="@string/desktop_mode"
         app:showAsAction="never" />
