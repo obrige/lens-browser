@@ -1,0 +1,38 @@
+package com.aurora.lens.shield
+
+data class ShieldProfile(
+    val userAgent: String = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    val platform: String = "Win32",
+    val vendor: String = "Google Inc.",
+    val vendorSub: String = "",
+    val product: String = "Gecko",
+    val productSub: String = "20030107",
+    val appName: String = "Netscape",
+    val appVersion: String = "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    val appCodeName: String = "Mozilla",
+    val language: String = "en-US",
+    val languages: List<String> = listOf("en-US", "en"),
+    val hardwareConcurrency: Int = 8,
+    val deviceMemory: Int = 8,
+    val maxTouchPoints: Int = 0,
+    val devicePixelRatio: Double = 1.0,
+    val screenWidth: Int = 1920,
+    val screenHeight: Int = 1080,
+    val availWidth: Int = 1920,
+    val availHeight: Int = 1040,
+    val colorDepth: Int = 24,
+    val pixelDepth: Int = 24,
+    val innerWidth: Int = 1440,
+    val innerHeight: Int = 800,
+    val outerWidth: Int = 1440,
+    val outerHeight: Int = 900,
+    val effectiveType: String = "4g",
+    val downlink: Double = 10.0,
+    val rtt: Int = 50,
+    val timezone: String = "America/New_York",
+    val glVendor: String = "Google Inc.",
+    val glRenderer: String = "ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0)",
+    val glVersion: String = "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+) {
+    companion object { val DEFAULT = ShieldProfile() }
+}
