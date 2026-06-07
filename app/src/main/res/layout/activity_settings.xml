@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/settings_profile"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp" />
+
+    <RadioGroup
+        android:id="@+id/rg_profile"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RadioButton
+            android:id="@+id/rb_desktop"
+            android:text="@string/profile_desktop"
+            android:checked="true" />
+        <RadioButton
+            android:id="@+id/rb_mobile"
+            android:text="@string/profile_mobile" />
+        <RadioButton
+            android:id="@+id/rb_tablet"
+            android:text="@string/profile_tablet" />
+    </RadioGroup>
+</LinearLayout>
