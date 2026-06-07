@@ -5,6 +5,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ProgressBar
@@ -28,19 +29,29 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
     private lateinit var urlBar: EditText
     private lateinit var progressBar: ProgressBar
     private lateinit var tabManager: TabManager
+    private lateinit var btnBack: ImageButton
+    private lateinit var btnForward: ImageButton
+    private lateinit var btnTabs: ImageButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
         drawer = findViewById(R.id.drawer_layout)
         toolbar = findViewById(R.id.toolbar)
         navView = findViewById(R.id.nav_view)
         webView = findViewById(R.id.webview)
         urlBar = findViewById(R.id.url_bar)
         progressBar = findViewById(R.id.progress_bar)
-        setSupportActionBar(toolbar)
+        btnBack = findViewById(R.id.btn_back)
+        btnForward = findViewById(R.id.btn_forward)
+        btnTabs = findViewById(R.id.btn_tabs)
 
-        val toggle = ActionBarDrawerToggle(this, drawer, toolbar, R.string.drawer_open, R.string.drawer_close)
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
+
+        val toggle = ActionBarDrawerToggle(this, drawer, toolbar,
+            R.string.drawer_open, R.string.drawer_close)
         drawer.addDrawerListener(toggle)
         toggle.syncState()
 
@@ -48,49 +59,51 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
             drawer.closeDrawers()
             when (item.itemId) {
                 R.id.nav_new_tab -> {
-                    webView.loadUrl("about:blank")
                     urlBar.setText("")
                     urlBar.requestFocus()
+                    webView.loadUrl("about:blank")
                 }
-                R.id.nav_bookmarks -> Toast.makeText(this, "书签（可扩展）", Toast.LENGTH_SHORT).show()
-                R.id.nav_history -> Toast.makeText(this, "历史记录已禁用", Toast.LENGTH_SHORT).show()
+                R.id.nav_bookmarks -> Toast.makeText(this, "书签功能开发中", Toast.LENGTH_SHORT).show()
+                R.id.nav_history -> Toast.makeText(this, "历史记录已禁用（隐私模式）", Toast.LENGTH_SHORT).show()
                 R.id.nav_settings -> startActivity(
-                    android.content.Intent(this, com.aurora.lens.ui.SettingsActivity::class.java)
-                )
+                    android.content.Intent(this, com.aurora.lens.ui.SettingsActivity::class.java))
                 R.id.nav_clean -> {
                     PrivacyCleaner.aggressiveClean(this)
                     webView.clearCache(true)
                     webView.reload()
-                    Toast.makeText(this, "已清除所有数据", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "已清除所有浏览数据", Toast.LENGTH_SHORT).show()
                 }
-                R.id.nav_about -> Toast.makeText(this, "镜界 · Lens v1.0", Toast.LENGTH_SHORT).show()
+                R.id.nav_about -> Toast.makeText(this, "镜界 v1.0 · 指纹隔离浏览器", Toast.LENGTH_SHORT).show()
             }
             true
         }
 
         tabManager = TabManager(webView, urlBar)
 
-        findViewById<ImageButton>(R.id.btn_back).setOnClickListener {
-            if (webView.canGoBack()) webView.goBack()
-        }
-        findViewById<ImageButton>(R.id.btn_forward).setOnClickListener {
-            if (webView.canGoForward()) webView.goForward()
-        }
+        btnBack.setOnClickListener { if (webView.canGoBack()) webView.goBack() }
+        btnForward.setOnClickListener { if (webView.canGoForward()) webView.goForward() }
         findViewById<ImageButton>(R.id.btn_refresh).setOnClickListener { webView.reload() }
-        findViewById<ImageButton>(R.id.btn_tabs).setOnClickListener { tabManager.showTabSwitcher() }
+        btnTabs.setOnClickListener { tabManager.showTabSwitcher() }
         findViewById<ImageButton>(R.id.btn_home).setOnClickListener { navigate("https://www.google.com") }
         findViewById<ImageButton>(R.id.btn_go).setOnClickListener { go() }
 
         urlBar.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_GO) { go(); true } else false
         }
+        urlBar.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) urlBar.selectAll()
+        }
 
+        updateNavButtons()
         webView.loadUrl("https://www.google.com")
     }
 
     private fun go() {
         val s = urlBar.text.toString().trim()
-        if (s.isNotEmpty()) navigate(s)
+        if (s.isNotEmpty()) {
+            hideKeyboard()
+            navigate(s)
+        }
     }
 
     private fun navigate(input: String) {
@@ -101,6 +114,47 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
         }
         urlBar.setText(url)
         webView.loadUrl(url)
+    }
+
+    private fun hideKeyboard() {
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager
+        imm?.hideSoftInputFromWindow(urlBar.windowToken, 0)
+    }
+
+    override fun onProgress(p: Int) {
+        progressBar.progress = p
+        if (p == 100) {
+            progressBar.animate().alpha(0f).withEndAction {
+                progressBar.visibility = View.GONE
+                progressBar.alpha = 1f
+            }.start()
+        } else {
+            progressBar.visibility = View.VISIBLE
+        }
+    }
+
+    override fun onTitle(t: String) {
+        toolbar.title = t
+    }
+
+    override fun onPageStarted(url: String) {
+        urlBar.setText(url)
+        updateNavButtons()
+    }
+
+    override fun onPageFinished(url: String) {
+        urlBar.setText(url)
+        updateNavButtons()
+        btnTabs.contentDescription = "标签页: ${tabManager.count()}"
+    }
+
+    override fun onNavigationStateChanged(canGoBack: Boolean, canGoForward: Boolean) {
+        updateNavButtons()
+    }
+
+    private fun updateNavButtons() {
+        btnBack.alpha = if (webView.canGoBack()) 1f else 0.3f
+        btnForward.alpha = if (webView.canGoForward()) 1f else 0.3f
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -120,18 +174,10 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
             PrivacyCleaner.aggressiveClean(this)
             webView.clearCache(true)
             webView.reload()
+            Toast.makeText(this, "已清除数据并刷新", Toast.LENGTH_SHORT).show()
             true
         }
         else -> super.onOptionsItemSelected(item)
-    }
-
-    override fun onProgress(p: Int) {
-        progressBar.progress = p
-        progressBar.visibility = if (p == 100) View.GONE else View.VISIBLE
-    }
-
-    override fun onTitle(t: String) {
-        toolbar.title = t
     }
 
     override fun onBackPressed() {
