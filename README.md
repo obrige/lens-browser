@@ -1,6 +1,31 @@
 # 🪞 镜界 (Lens Browser)
 
+[![Build APK](https://github.com/obrige/lens-browser/actions/workflows/build.yml/badge.svg)](https://github.com/obrige/lens-browser/actions/workflows/build.yml)
+
 轻量 Android WebView 指纹隔离浏览器 · 48 项指纹向量全部隔离。
+
+## 本地构建
+
+```bash
+# 前提条件
+# - JDK 17+
+# - Android SDK (compileSdk 35)
+
+# 克隆项目
+git clone https://github.com/obrige/lens-browser.git
+cd lens-browser
+
+# 生成图标（可选）
+python3 scripts/generate_icons.py
+
+# 构建 Debug APK
+./gradlew assembleDebug
+# 输出: app/build/outputs/apk/debug/app-debug.apk
+```
+
+## 在线构建
+
+每次 push 到 `main` 分支，GitHub Actions 自动构建 APK → [Actions 页签](https://github.com/obrige/lens-browser/actions)。
 
 ## 架构
 
@@ -33,8 +58,8 @@ browser/
 
 ## 验证
 
-打开 [browserleaks.com/canvas](https://browserleaks.com/canvas) 或 [fingerprint.com/demo](https://fingerprint.com/demo)
+打开 [browserleaks.com/canvas](https://browserleaks.com/canvas) 或 [fingerprint.com/demo](https://fingerprint.com/demo) 测试。
 
-## 在线构建
+## 许可证
 
-每次 push 到 main 分支，GitHub Actions 自动构建 APK → Actions 页签下载。
+MIT License
