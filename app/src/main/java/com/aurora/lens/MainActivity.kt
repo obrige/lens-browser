@@ -16,6 +16,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.drawerlayout.widget.DrawerLayout
 import com.aurora.lens.browser.LensChromeClient
 import com.aurora.lens.browser.LensWebView
+import com.aurora.lens.shield.ShieldProfile
 import com.aurora.lens.ui.TabManager
 import com.aurora.lens.util.PrivacyCleaner
 import com.google.android.material.navigation.NavigationView
@@ -32,6 +33,9 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
     private lateinit var btnBack: ImageButton
     private lateinit var btnForward: ImageButton
     private lateinit var btnTabs: ImageButton
+
+    private val prefs by lazy { getSharedPreferences("shield", MODE_PRIVATE) }
+    private var isDesktopMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,6 +58,11 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
             R.string.drawer_open, R.string.drawer_close)
         drawer.addDrawerListener(toggle)
         toggle.syncState()
+
+        // Restore saved settings
+        isDesktopMode = prefs.getBoolean("desktop_mode", false)
+        applyProfile()
+        if (isDesktopMode) applyDesktopUA()
 
         navView.setNavigationItemSelectedListener { item ->
             drawer.closeDrawers()
@@ -96,6 +105,31 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
 
         updateNavButtons()
         webView.loadUrl("https://www.google.com")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        applyProfile()
+    }
+
+    private fun applyProfile() {
+        val name = prefs.getString("profile_name", "mobile") ?: "mobile"
+        val profile = when (name) {
+            "desktop" -> ShieldProfile.DESKTOP
+            "tablet" -> ShieldProfile(
+                userAgent = "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+                platform = "iPad",
+                screenWidth = 1024, screenHeight = 1366,
+                innerWidth = 1024, innerHeight = 1366,
+                maxTouchPoints = 5, devicePixelRatio = 2.0,
+            )
+            else -> ShieldProfile.DEFAULT
+        }
+        webView.setShieldProfile(profile)
+    }
+
+    private fun applyDesktopUA() {
+        webView.settings.userAgentString = ShieldProfile.DESKTOP.userAgent
     }
 
     private fun go() {
@@ -145,7 +179,6 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
     override fun onPageFinished(url: String) {
         urlBar.setText(url)
         updateNavButtons()
-        btnTabs.contentDescription = "标签页: ${tabManager.count()}"
     }
 
     override fun onNavigationStateChanged(canGoBack: Boolean, canGoForward: Boolean) {
@@ -164,10 +197,16 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.action_desktop -> {
-            val ua = webView.settings.userAgentString
-            webView.settings.userAgentString = ua.replace("Mobile", "").replace("Android", "Windows")
+            isDesktopMode = !isDesktopMode
+            prefs.edit().putBoolean("desktop_mode", isDesktopMode).apply()
+            if (isDesktopMode) {
+                applyDesktopUA()
+                Toast.makeText(this, "已切换桌面模式", Toast.LENGTH_SHORT).show()
+            } else {
+                applyProfile()
+                Toast.makeText(this, "已切换手机模式", Toast.LENGTH_SHORT).show()
+            }
             webView.reload()
-            Toast.makeText(this, "已切换桌面模式", Toast.LENGTH_SHORT).show()
             true
         }
         R.id.action_clean -> {
