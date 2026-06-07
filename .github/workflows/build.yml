@@ -1,6 +1,9 @@
 name: Build APK
+
 on:
   push:
+    branches: [main]
+  pull_request:
     branches: [main]
   workflow_dispatch:
 
@@ -9,20 +12,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Generate launcher icons
-        run: python3 scripts/generate_icons.py
+          cache: 'gradle'
+
       - name: Setup Gradle
         run: |
           if [ ! -f gradlew ]; then
-            gradle wrapper --gradle-version 8.5
+            gradle wrapper --gradle-version 8.10
           fi
           chmod +x gradlew
+
+      - name: Generate launcher icons
+        run: python3 scripts/generate_icons.py
+
       - name: Build Debug APK
         run: ./gradlew assembleDebug
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
