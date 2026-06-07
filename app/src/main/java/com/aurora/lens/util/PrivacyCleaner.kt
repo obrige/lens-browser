@@ -9,24 +9,24 @@ import java.io.File
 object PrivacyCleaner {
     fun aggressiveClean(context: Context) {
         try { CookieManager.getInstance().apply { removeAllCookies(null); flush() } }
-        catch (e: Exception) { Log.e("PrivacyCleaner", "Cookie cleanup failed", e) }
+        catch (e: Throwable) { Log.e("PrivacyCleaner", "Cookie cleanup failed", e) }
 
         try { WebStorage.getInstance().deleteAllData() }
-        catch (e: Exception) { Log.e("PrivacyCleaner", "WebStorage cleanup failed", e) }
+        catch (e: Throwable) { Log.e("PrivacyCleaner", "WebStorage cleanup failed", e) }
 
         try { context.cacheDir?.deleteRecursively() }
-        catch (e: Exception) { Log.e("PrivacyCleaner", "Cache cleanup failed", e) }
+        catch (e: Throwable) { Log.e("PrivacyCleaner", "Cache cleanup failed", e) }
 
         try { context.externalCacheDir?.deleteRecursively() }
-        catch (e: Exception) { Log.e("PrivacyCleaner", "ExtCache cleanup failed", e) }
+        catch (e: Throwable) { Log.e("PrivacyCleaner", "ExtCache cleanup failed", e) }
 
         try {
             context.dataDir?.let { dir ->
                 listOf("app_webview", "cache", "code_cache").forEach {
                     try { File(dir, it).deleteRecursively() }
-                    catch (e: Exception) { Log.w("PrivacyCleaner", "Failed to delete $it", e) }
+                    catch (e: Throwable) { Log.w("PrivacyCleaner", "Failed to delete $it", e) }
                 }
             }
-        } catch (e: Exception) { Log.e("PrivacyCleaner", "DataDir cleanup failed", e) }
+        } catch (e: Throwable) { Log.e("PrivacyCleaner", "DataDir cleanup failed", e) }
     }
 }
