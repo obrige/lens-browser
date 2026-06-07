@@ -60,7 +60,7 @@
         android:orientation="horizontal"
         android:gravity="center"
         android:elevation="8dp"
-        android:background="?attr/colorSurface">
+        android:background="@color/surface">
 
         <ImageButton android:id="@+id/btn_back"
             style="@style/BottomBarButton"
