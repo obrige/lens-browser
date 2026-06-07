@@ -14,6 +14,27 @@ class LensWebViewClient(
     private val profile: ShieldProfile,
 ) : WebViewClient() {
 
+    private fun host(view: WebView?) = view?.context as? LensChromeClient.ProgressHost
+
+    override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+        url?.let { host(view)?.onPageStarted(it) }
+        updateNav(view)
+    }
+
+    override fun onPageFinished(view: WebView?, url: String?) {
+        url?.let { host(view)?.onPageFinished(it) }
+        updateNav(view)
+    }
+
+    override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
+        updateNav(view)
+    }
+
+    private fun updateNav(view: WebView?) {
+        val v = view ?: return
+        host(v)?.onNavigationStateChanged(v.canGoBack(), v.canGoForward())
+    }
+
     override fun shouldInterceptRequest(
         view: WebView?,
         req: WebResourceRequest,
