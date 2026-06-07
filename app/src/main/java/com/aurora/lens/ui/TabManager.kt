@@ -12,7 +12,13 @@ class TabManager(
     private val tabs = mutableListOf<Tab>()
     private var currentIndex = 0
 
+    val currentUrl: String get() = webView.url ?: ""
+    val currentTitle: String get() = webView.title ?: ""
+
+    fun count(): Int = tabs.size
+
     fun openTab(url: String) {
+        saveCurrent()
         tabs.add(Tab(url, ""))
         currentIndex = tabs.lastIndex
         webView.loadUrl(url)
@@ -26,17 +32,15 @@ class TabManager(
     }
 
     fun showTabSwitcher() {
-        Toast.makeText(
-            webView.context,
-            "标签页: ${tabs.size} 个（轻量模式）",
-            Toast.LENGTH_SHORT
-        ).show()
+        val info = if (tabs.isEmpty()) "暂无标签页"
+        else "标签页 (${tabs.size}) · 当前: ${tabs.getOrNull(currentIndex)?.url?.take(60) ?: "—"}"
+        Toast.makeText(webView.context, info, Toast.LENGTH_SHORT).show()
     }
 
     fun saveCurrent() {
         if (currentIndex < tabs.size) {
-            tabs[currentIndex] = Tab(webView.url ?: "", webView.title ?: "")
+            tabs[currentIndex] = Tab(currentUrl, currentTitle)
         }
-        urlBar.setText(webView.url ?: "")
+        urlBar.setText(currentUrl)
     }
 }
