@@ -1,11 +1,16 @@
 package com.aurora.lens
 
+import android.app.DownloadManager
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import android.webkit.URLUtil
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ProgressBar
@@ -14,6 +19,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.aurora.lens.browser.LensChromeClient
 import com.aurora.lens.browser.LensWebView
 import com.aurora.lens.shield.ShieldProfile
@@ -29,14 +35,17 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
     private lateinit var webView: LensWebView
     private lateinit var urlBar: EditText
     private lateinit var progressBar: ProgressBar
+    private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var tabManager: TabManager
     private lateinit var btnBack: ImageButton
     private lateinit var btnForward: ImageButton
+    private lateinit var btnRefresh: ImageButton
     private lateinit var btnTabs: ImageButton
 
     private val prefs by lazy { getSharedPreferences("shield", MODE_PRIVATE) }
     private var isDesktopMode = false
     private var currentProfile: ShieldProfile = ShieldProfile.DEFAULT
+    private var isLoading = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,8 +57,10 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
         webView = findViewById(R.id.webview)
         urlBar = findViewById(R.id.url_bar)
         progressBar = findViewById(R.id.progress_bar)
+        swipeRefresh = findViewById(R.id.swipe_refresh)
         btnBack = findViewById(R.id.btn_back)
         btnForward = findViewById(R.id.btn_forward)
+        btnRefresh = findViewById(R.id.btn_refresh)
         btnTabs = findViewById(R.id.btn_tabs)
 
         setSupportActionBar(toolbar)
@@ -60,7 +71,7 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
         drawer.addDrawerListener(toggle)
         toggle.syncState()
 
-        // Per-install variation: generate once, persist forever
+        // Per-install variation
         if (!prefs.getBoolean("fingerprint_seeded", false)) {
             currentProfile = ShieldProfile.varied()
             prefs.edit().putBoolean("fingerprint_seeded", true).apply()
@@ -68,6 +79,26 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
         isDesktopMode = prefs.getBoolean("desktop_mode", false)
         applyProfile()
         if (isDesktopMode) applyDesktopUA()
+
+        // Pull to refresh
+        swipeRefresh.setOnRefreshListener { webView.reload() }
+        swipeRefresh.setColorSchemeResources(android.R.color.holo_blue_bright)
+
+        // Download listener
+        webView.setDownloadListener { url, _, _, mimeType, _ ->
+            try {
+                val request = DownloadManager.Request(Uri.parse(url))
+                    .setMimeType(mimeType)
+                    .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                    .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS,
+                        URLUtil.guessFileName(url, null, mimeType))
+                val dm = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+                dm.enqueue(request)
+                Toast.makeText(this, "下载中…", Toast.LENGTH_SHORT).show()
+            } catch (e: Throwable) {
+                Toast.makeText(this, "下载失败: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
 
         navView.setNavigationItemSelectedListener { item ->
             drawer.closeDrawers()
@@ -80,7 +111,7 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
                 R.id.nav_bookmarks -> Toast.makeText(this, "书签功能开发中", Toast.LENGTH_SHORT).show()
                 R.id.nav_history -> Toast.makeText(this, "历史记录已禁用（隐私模式）", Toast.LENGTH_SHORT).show()
                 R.id.nav_settings -> startActivity(
-                    android.content.Intent(this, com.aurora.lens.ui.SettingsActivity::class.java))
+                    Intent(this, com.aurora.lens.ui.SettingsActivity::class.java))
                 R.id.nav_clean -> {
                     PrivacyCleaner.aggressiveClean(this)
                     webView.clearCache(true)
@@ -96,7 +127,9 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
 
         btnBack.setOnClickListener { if (webView.canGoBack()) webView.goBack() }
         btnForward.setOnClickListener { if (webView.canGoForward()) webView.goForward() }
-        findViewById<ImageButton>(R.id.btn_refresh).setOnClickListener { webView.reload() }
+        btnRefresh.setOnClickListener {
+            if (isLoading) webView.stopLoading() else webView.reload()
+        }
         btnTabs.setOnClickListener { tabManager.showTabSwitcher() }
         findViewById<ImageButton>(R.id.btn_home).setOnClickListener { navigate("https://www.google.com") }
         findViewById<ImageButton>(R.id.btn_go).setOnClickListener { go() }
@@ -160,6 +193,8 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
         imm?.hideSoftInputFromWindow(urlBar.windowToken, 0)
     }
 
+    // ── ProgressHost ──
+
     override fun onProgress(p: Int) {
         progressBar.progress = p
         if (p == 100) {
@@ -167,8 +202,13 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
                 progressBar.visibility = View.GONE
                 progressBar.alpha = 1f
             }.start()
+            isLoading = false
+            swipeRefresh.isRefreshing = false
+            btnRefresh.setImageResource(R.drawable.ic_refresh)
         } else {
             progressBar.visibility = View.VISIBLE
+            isLoading = true
+            btnRefresh.setImageResource(android.R.drawable.ic_media_pause)
         }
     }
 
@@ -178,11 +218,16 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
 
     override fun onPageStarted(url: String) {
         urlBar.setText(url)
+        isLoading = true
+        btnRefresh.setImageResource(android.R.drawable.ic_media_pause)
         updateNavButtons()
     }
 
     override fun onPageFinished(url: String) {
         urlBar.setText(url)
+        isLoading = false
+        swipeRefresh.isRefreshing = false
+        btnRefresh.setImageResource(R.drawable.ic_refresh)
         updateNavButtons()
     }
 
@@ -194,6 +239,8 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
         btnBack.alpha = if (webView.canGoBack()) 1f else 0.3f
         btnForward.alpha = if (webView.canGoForward()) 1f else 0.3f
     }
+
+    // ── Menu ──
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.toolbar_menu, menu)
