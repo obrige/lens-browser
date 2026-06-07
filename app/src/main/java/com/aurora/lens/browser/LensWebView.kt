@@ -1,7 +1,9 @@
 package com.aurora.lens.browser
 
 import android.content.Context
+import android.os.Build
 import android.util.AttributeSet
+import android.util.Log
 import android.webkit.CookieManager
 import android.webkit.WebSettings
 import android.webkit.WebStorage
@@ -16,7 +18,10 @@ class LensWebView @JvmOverloads constructor(
 
     private var shieldProfile = ShieldProfile.DEFAULT
 
-    init { configure() }
+    init {
+        try { configure() }
+        catch (e: Exception) { Log.e("LensWebView", "configure failed", e) }
+    }
 
     fun setShieldProfile(p: ShieldProfile) {
         shieldProfile = p
@@ -44,8 +49,11 @@ class LensWebView @JvmOverloads constructor(
             useWideViewPort = true
             mediaPlaybackRequiresUserGesture = true
             setGeolocationEnabled(false)
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             @Suppress("DEPRECATION")
-            setSupportMultipleWindows(false)
+            settings.setSupportMultipleWindows(false)
         }
 
         CookieManager.getInstance().apply {
