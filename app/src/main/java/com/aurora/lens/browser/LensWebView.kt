@@ -28,6 +28,7 @@ class LensWebView @JvmOverloads constructor(
         settings.userAgentString = p.userAgent
     }
 
+    @Suppress("DEPRECATION")
     private fun configure() {
         with(settings) {
             userAgentString = shieldProfile.userAgent
@@ -52,13 +53,14 @@ class LensWebView @JvmOverloads constructor(
         }
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            @Suppress("DEPRECATION")
             settings.setSupportMultipleWindows(false)
         }
 
         CookieManager.getInstance().apply {
             setAcceptCookie(true)
-            setAcceptThirdPartyCookies(this@LensWebView, false)
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                setAcceptThirdPartyCookies(this@LensWebView, false)
+            }
             removeAllCookies(null)
             flush()
         }
