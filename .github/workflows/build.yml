@@ -10,6 +10,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: actions/checkout@v4
 
@@ -26,9 +28,6 @@ jobs:
             gradle wrapper --gradle-version 8.11.1
           fi
           chmod +x gradlew
-
-      - name: Generate launcher icons
-        run: python3 scripts/generate_icons.py
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug
