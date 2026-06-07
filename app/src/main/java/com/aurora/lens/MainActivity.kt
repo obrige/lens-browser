@@ -71,7 +71,6 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
         drawer.addDrawerListener(toggle)
         toggle.syncState()
 
-        // Per-install variation
         if (!prefs.getBoolean("fingerprint_seeded", false)) {
             currentProfile = ShieldProfile.varied()
             prefs.edit().putBoolean("fingerprint_seeded", true).apply()
@@ -80,42 +79,31 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
         applyProfile()
         if (isDesktopMode) applyDesktopUA()
 
-        // Pull to refresh
         swipeRefresh.setOnRefreshListener { webView.reload() }
-        swipeRefresh.setColorSchemeResources(android.R.color.holo_blue_bright)
 
-        // Download listener
         webView.setDownloadListener { url, _, _, mimeType, _ ->
             try {
-                val request = DownloadManager.Request(Uri.parse(url))
+                val dm = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+                dm.enqueue(DownloadManager.Request(Uri.parse(url))
                     .setMimeType(mimeType)
                     .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                     .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS,
-                        URLUtil.guessFileName(url, null, mimeType))
-                val dm = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
-                dm.enqueue(request)
+                        URLUtil.guessFileName(url, null, mimeType)))
                 Toast.makeText(this, "下载中…", Toast.LENGTH_SHORT).show()
             } catch (e: Throwable) {
-                Toast.makeText(this, "下载失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "下载失败", Toast.LENGTH_SHORT).show()
             }
         }
 
         navView.setNavigationItemSelectedListener { item ->
             drawer.closeDrawers()
             when (item.itemId) {
-                R.id.nav_new_tab -> {
-                    urlBar.setText("")
-                    urlBar.requestFocus()
-                    webView.loadUrl("about:blank")
-                }
+                R.id.nav_new_tab -> { urlBar.setText(""); urlBar.requestFocus(); webView.loadUrl("about:blank") }
                 R.id.nav_bookmarks -> Toast.makeText(this, "书签功能开发中", Toast.LENGTH_SHORT).show()
                 R.id.nav_history -> Toast.makeText(this, "历史记录已禁用（隐私模式）", Toast.LENGTH_SHORT).show()
-                R.id.nav_settings -> startActivity(
-                    Intent(this, com.aurora.lens.ui.SettingsActivity::class.java))
+                R.id.nav_settings -> startActivity(Intent(this, com.aurora.lens.ui.SettingsActivity::class.java))
                 R.id.nav_clean -> {
-                    PrivacyCleaner.aggressiveClean(this)
-                    webView.clearCache(true)
-                    webView.reload()
+                    PrivacyCleaner.aggressiveClean(this); webView.clearCache(true); webView.reload()
                     Toast.makeText(this, "已清除所有浏览数据", Toast.LENGTH_SHORT).show()
                 }
                 R.id.nav_about -> Toast.makeText(this, "镜界 v1.0 · 指纹隔离浏览器", Toast.LENGTH_SHORT).show()
@@ -127,9 +115,7 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
 
         btnBack.setOnClickListener { if (webView.canGoBack()) webView.goBack() }
         btnForward.setOnClickListener { if (webView.canGoForward()) webView.goForward() }
-        btnRefresh.setOnClickListener {
-            if (isLoading) webView.stopLoading() else webView.reload()
-        }
+        btnRefresh.setOnClickListener { if (isLoading) webView.stopLoading() else webView.reload() }
         btnTabs.setOnClickListener { tabManager.showTabSwitcher() }
         findViewById<ImageButton>(R.id.btn_home).setOnClickListener { navigate("https://www.google.com") }
         findViewById<ImageButton>(R.id.btn_go).setOnClickListener { go() }
@@ -137,9 +123,7 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
         urlBar.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_GO) { go(); true } else false
         }
-        urlBar.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus) urlBar.selectAll()
-        }
+        urlBar.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) urlBar.selectAll() }
 
         updateNavButtons()
         webView.loadUrl("https://www.google.com")
@@ -156,130 +140,70 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
             "desktop" -> ShieldProfile.DESKTOP
             "tablet" -> ShieldProfile(
                 userAgent = "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
-                platform = "iPad",
-                screenWidth = 1024, screenHeight = 1366,
-                innerWidth = 1024, innerHeight = 1366,
-                maxTouchPoints = 5, devicePixelRatio = 2.0,
-            )
+                platform = "iPad", screenWidth = 1024, screenHeight = 1366,
+                innerWidth = 1024, innerHeight = 1366, maxTouchPoints = 5, devicePixelRatio = 2.0)
             else -> currentProfile
         }
         webView.setShieldProfile(profile)
     }
 
-    private fun applyDesktopUA() {
-        webView.settings.userAgentString = ShieldProfile.DESKTOP.userAgent
-    }
+    private fun applyDesktopUA() { webView.settings.userAgentString = ShieldProfile.DESKTOP.userAgent }
 
-    private fun go() {
-        val s = urlBar.text.toString().trim()
-        if (s.isNotEmpty()) {
-            hideKeyboard()
-            navigate(s)
-        }
-    }
+    private fun go() { val s = urlBar.text.toString().trim(); if (s.isNotEmpty()) { hideKeyboard(); navigate(s) } }
 
     private fun navigate(input: String) {
-        val url = if (input.contains('.') && !input.contains(' ')) {
-            if (!input.startsWith("http")) "https://$input" else input
-        } else {
-            "https://www.google.com/search?q=${java.net.URLEncoder.encode(input, "UTF-8")}"
-        }
-        urlBar.setText(url)
-        webView.loadUrl(url)
+        val url = if (input.contains('.') && !input.contains(' '))
+            (if (!input.startsWith("http")) "https://$input" else input)
+        else "https://www.google.com/search?q=${java.net.URLEncoder.encode(input, "UTF-8")}"
+        urlBar.setText(url); webView.loadUrl(url)
     }
 
     private fun hideKeyboard() {
-        val imm = getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager
-        imm?.hideSoftInputFromWindow(urlBar.windowToken, 0)
+        (getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager)
+            ?.hideSoftInputFromWindow(urlBar.windowToken, 0)
     }
-
-    // ── ProgressHost ──
 
     override fun onProgress(p: Int) {
         progressBar.progress = p
         if (p == 100) {
-            progressBar.animate().alpha(0f).withEndAction {
-                progressBar.visibility = View.GONE
-                progressBar.alpha = 1f
-            }.start()
-            isLoading = false
-            swipeRefresh.isRefreshing = false
-            btnRefresh.setImageResource(R.drawable.ic_refresh)
-        } else {
-            progressBar.visibility = View.VISIBLE
-            isLoading = true
-            btnRefresh.setImageResource(android.R.drawable.ic_media_pause)
-        }
+            progressBar.animate().alpha(0f).withEndAction { progressBar.visibility = View.GONE; progressBar.alpha = 1f }.start()
+            isLoading = false; swipeRefresh.isRefreshing = false; btnRefresh.setImageResource(R.drawable.ic_refresh)
+        } else { progressBar.visibility = View.VISIBLE; isLoading = true; btnRefresh.setImageResource(android.R.drawable.ic_media_pause) }
     }
 
-    override fun onTitle(t: String) {
-        toolbar.title = t
-    }
-
-    override fun onPageStarted(url: String) {
-        urlBar.setText(url)
-        isLoading = true
-        btnRefresh.setImageResource(android.R.drawable.ic_media_pause)
-        updateNavButtons()
-    }
-
-    override fun onPageFinished(url: String) {
-        urlBar.setText(url)
-        isLoading = false
-        swipeRefresh.isRefreshing = false
-        btnRefresh.setImageResource(R.drawable.ic_refresh)
-        updateNavButtons()
-    }
-
-    override fun onNavigationStateChanged(canGoBack: Boolean, canGoForward: Boolean) {
-        updateNavButtons()
-    }
+    override fun onTitle(t: String) { toolbar.title = t }
+    override fun onPageStarted(url: String) { urlBar.setText(url); isLoading = true; btnRefresh.setImageResource(android.R.drawable.ic_media_pause); updateNavButtons() }
+    override fun onPageFinished(url: String) { urlBar.setText(url); isLoading = false; swipeRefresh.isRefreshing = false; btnRefresh.setImageResource(R.drawable.ic_refresh); updateNavButtons() }
+    override fun onNavigationStateChanged(canGoBack: Boolean, canGoForward: Boolean) { updateNavButtons() }
 
     private fun updateNavButtons() {
         btnBack.alpha = if (webView.canGoBack()) 1f else 0.3f
         btnForward.alpha = if (webView.canGoForward()) 1f else 0.3f
     }
 
-    // ── Menu ──
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.toolbar_menu, menu)
-        return true
-    }
+    override fun onCreateOptionsMenu(menu: Menu): Boolean { menuInflater.inflate(R.menu.toolbar_menu, menu); return true }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
+        R.id.action_share -> {
+            startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"; putExtra(Intent.EXTRA_TEXT, webView.url ?: urlBar.text.toString())
+            }, "分享链接"))
+            true
+        }
+        R.id.action_find -> { webView.showFindDialog(null, true); true }
         R.id.action_desktop -> {
-            isDesktopMode = !isDesktopMode
-            prefs.edit().putBoolean("desktop_mode", isDesktopMode).apply()
-            if (isDesktopMode) {
-                applyDesktopUA()
-                Toast.makeText(this, "已切换桌面模式", Toast.LENGTH_SHORT).show()
-            } else {
-                applyProfile()
-                Toast.makeText(this, "已切换手机模式", Toast.LENGTH_SHORT).show()
-            }
-            webView.reload()
-            true
+            isDesktopMode = !isDesktopMode; prefs.edit().putBoolean("desktop_mode", isDesktopMode).apply()
+            if (isDesktopMode) { applyDesktopUA(); Toast.makeText(this, "已切换桌面模式", Toast.LENGTH_SHORT).show() }
+            else { applyProfile(); Toast.makeText(this, "已切换手机模式", Toast.LENGTH_SHORT).show() }
+            webView.reload(); true
         }
-        R.id.action_clean -> {
-            PrivacyCleaner.aggressiveClean(this)
-            webView.clearCache(true)
-            webView.reload()
-            Toast.makeText(this, "已清除数据并刷新", Toast.LENGTH_SHORT).show()
-            true
-        }
+        R.id.action_clean -> { PrivacyCleaner.aggressiveClean(this); webView.clearCache(true); webView.reload(); Toast.makeText(this, "已清除数据并刷新", Toast.LENGTH_SHORT).show(); true }
         else -> super.onOptionsItemSelected(item)
     }
 
     override fun onBackPressed() {
-        if (drawer.isDrawerOpen(navView)) drawer.closeDrawers()
-        else if (webView.canGoBack()) webView.goBack()
-        else super.onBackPressed()
+        if (drawer.isDrawerOpen(navView)) drawer.closeDrawers() else if (webView.canGoBack()) webView.goBack() else super.onBackPressed()
     }
 
-    override fun onDestroy() {
-        PrivacyCleaner.aggressiveClean(this)
-        webView.destroy()
-        super.onDestroy()
-    }
+    override fun onDestroy() { PrivacyCleaner.aggressiveClean(this); webView.destroy(); super.onDestroy() }
 }
