@@ -1,5 +1,7 @@
 package com.aurora.lens.shield
 
+import kotlin.random.Random
+
 data class ShieldProfile(
     val userAgent: String = "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.144 Mobile Safari/537.36",
     val platform: String = "Linux armv8l",
@@ -31,7 +33,7 @@ data class ShieldProfile(
     val rtt: Int = 50,
     val timezone: String = "America/New_York",
     val glVendor: String = "ARM",
-    val glRenderer: String = "Mali-G78",
+    val glRenderer: String = "Mali-G710",
     val glVersion: String = "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
 ) {
     companion object {
@@ -46,6 +48,30 @@ data class ShieldProfile(
             outerWidth = 1440, outerHeight = 900,
             maxTouchPoints = 0,
             devicePixelRatio = 1.0,
+            glRenderer = "ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0)",
         )
+
+        /** Add subtle ±variation to avoid all users having identical fingerprint */
+        fun varied(): ShieldProfile {
+            val r = Random(System.nanoTime())
+            return ShieldProfile(
+                screenWidth = DEFAULT.screenWidth + r.nextInt(-2, 3),
+                screenHeight = DEFAULT.screenHeight + r.nextInt(-4, 5),
+                availHeight = DEFAULT.availHeight + r.nextInt(-4, 5),
+                innerWidth = DEFAULT.innerWidth + r.nextInt(-2, 3),
+                innerHeight = DEFAULT.innerHeight + r.nextInt(-2, 3),
+                outerWidth = DEFAULT.outerWidth + r.nextInt(-2, 3),
+                outerHeight = DEFAULT.outerHeight + r.nextInt(-2, 3),
+                devicePixelRatio = DEFAULT.devicePixelRatio + r.nextDouble(-0.05, 0.06),
+                hardwareConcurrency = DEFAULT.hardwareConcurrency + r.nextInt(-1, 2),
+                deviceMemory = DEFAULT.deviceMemory + r.nextInt(-1, 2),
+                effectiveType = listOf("4g", "4g", "4g", "3g").random(r),
+                rtt = DEFAULT.rtt + r.nextInt(-10, 21),
+                canvasNoiseSeed = r.nextInt(),
+            )
+        }
     }
+
+    /** Non-zero seed enables per-pixel canvas noise variation */
+    val canvasNoiseSeed: Int = 0
 }
