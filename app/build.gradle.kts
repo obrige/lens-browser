@@ -30,6 +30,14 @@ android {
     kotlinOptions { jvmTarget = "17" }
 }
 
+// Auto-generate launcher icons before each build
+tasks.register<Exec>("generateIcons") {
+    workingDir = rootProject.projectDir
+    commandLine("python3", "scripts/generate_icons.py")
+    isIgnoreExitValue = true
+}
+tasks.named("preBuild") { dependsOn("generateIcons") }
+
 dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.appcompat:appcompat:1.7.0")
