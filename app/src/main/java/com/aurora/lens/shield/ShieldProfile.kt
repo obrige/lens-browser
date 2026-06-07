@@ -35,6 +35,7 @@ data class ShieldProfile(
     val glVendor: String = "ARM",
     val glRenderer: String = "Mali-G710",
     val glVersion: String = "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    val canvasNoiseSeed: Int = 0,
 ) {
     companion object {
         val DEFAULT = ShieldProfile()
@@ -51,7 +52,6 @@ data class ShieldProfile(
             glRenderer = "ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0)",
         )
 
-        /** Add subtle ±variation to avoid all users having identical fingerprint */
         fun varied(): ShieldProfile {
             val r = Random(System.nanoTime())
             return ShieldProfile(
@@ -71,7 +71,4 @@ data class ShieldProfile(
             )
         }
     }
-
-    /** Non-zero seed enables per-pixel canvas noise variation */
-    val canvasNoiseSeed: Int = 0
 }
