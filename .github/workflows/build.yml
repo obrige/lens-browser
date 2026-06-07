@@ -13,6 +13,8 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+      - name: Generate launcher icons
+        run: python3 scripts/generate_icons.py
       - name: Setup Gradle
         run: |
           if [ ! -f gradlew ]; then
