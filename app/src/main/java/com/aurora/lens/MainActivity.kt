@@ -36,6 +36,7 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
 
     private val prefs by lazy { getSharedPreferences("shield", MODE_PRIVATE) }
     private var isDesktopMode = false
+    private var currentProfile: ShieldProfile = ShieldProfile.DEFAULT
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,7 +60,11 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
         drawer.addDrawerListener(toggle)
         toggle.syncState()
 
-        // Restore saved settings
+        // Per-install variation: generate once, persist forever
+        if (!prefs.getBoolean("fingerprint_seeded", false)) {
+            currentProfile = ShieldProfile.varied()
+            prefs.edit().putBoolean("fingerprint_seeded", true).apply()
+        }
         isDesktopMode = prefs.getBoolean("desktop_mode", false)
         applyProfile()
         if (isDesktopMode) applyDesktopUA()
@@ -109,7 +114,7 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
 
     override fun onResume() {
         super.onResume()
-        applyProfile()
+        if (!isDesktopMode) applyProfile()
     }
 
     private fun applyProfile() {
@@ -123,7 +128,7 @@ class MainActivity : AppCompatActivity(), LensChromeClient.ProgressHost {
                 innerWidth = 1024, innerHeight = 1366,
                 maxTouchPoints = 5, devicePixelRatio = 2.0,
             )
-            else -> ShieldProfile.DEFAULT
+            else -> currentProfile
         }
         webView.setShieldProfile(profile)
     }
