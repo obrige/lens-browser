@@ -33,16 +33,16 @@ class LensWebView @JvmOverloads constructor(
         with(settings) {
             userAgentString = shieldProfile.userAgent
             javaScriptEnabled = true
-            domStorageEnabled = false
-            databaseEnabled = false
+            domStorageEnabled = true
+            databaseEnabled = true
             allowFileAccess = false
             allowContentAccess = false
             allowFileAccessFromFileURLs = false
             allowUniversalAccessFromFileURLs = false
             saveFormData = false
             savePassword = false
-            mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
-            cacheMode = WebSettings.LOAD_NO_CACHE
+            mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+            cacheMode = WebSettings.LOAD_DEFAULT
             setSupportZoom(true)
             builtInZoomControls = true
             displayZoomControls = false
