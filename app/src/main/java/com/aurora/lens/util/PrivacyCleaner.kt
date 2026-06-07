@@ -24,7 +24,7 @@ object PrivacyCleaner {
             context.dataDir?.let { dir ->
                 listOf("app_webview", "cache", "code_cache").forEach {
                     try { File(dir, it).deleteRecursively() }
-                    catch (_: Exception) {}
+                    catch (e: Exception) { Log.w("PrivacyCleaner", "Failed to delete $it", e) }
                 }
             }
         } catch (e: Exception) { Log.e("PrivacyCleaner", "DataDir cleanup failed", e) }
